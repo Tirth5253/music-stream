@@ -3,7 +3,7 @@ import Header from "@/components/Header";
 import ListItem from "@/components/ListItem";
 import PageContent from "./components/PageContent";
 
-export const revalide=0;
+// export const revalide=0;
 
 export default async  function Home() {
  const songs =await getSongs();
@@ -11,7 +11,7 @@ export default async  function Home() {
    <div className="bg-neutral-900 rounded-lg h-full w-full overflow-hidden overflow-y-auto">
       <Header>
         <div className="mb-2">
-          <h1 className="text-white text-3xl sfont-semibold">
+          <h1 className="text-white text-3xl sfont-bold">
             Welcome Back
           
           </h1>

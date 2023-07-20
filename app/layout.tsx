@@ -1,17 +1,20 @@
 import Sidebar from '@/components/Sidebar'
 import './globals.css'
-import { Figtree } from 'next/font/google'
+import { Figtree } from 'next/font/google';
 import SupabaseProvider from '@/providers/SuperbaseProvider'
 import UserProvider from '@/providers/UserProvider'
 import ModalProvider from '../providers/ModalProvider';
 import ToasterProvider from '@/providers/ToasterProvider'
-// import getSongs from '@/actions/getSongs'
-// // import getSongsByUserId from '@/actions/getSongsByUserId'
+import ReactPlayer from 'react-player';
+import getSongs from '@/actions/getSongs'
+import getSongsByUserId from '@/actions/getSongsByUserId';
+import Player from '@/components/Player';
+
 
 const font = Figtree({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Spotify',
+  title: 'Lyrico',
   description: 'Listen to music',
 };
 export const revalidate=0;
@@ -21,7 +24,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // const userSongs=await getSongsByUserId();
+  const userSongs = await getSongsByUserId();
+
   return (
     
     <html lang="en">
@@ -30,9 +34,10 @@ export default async function RootLayout({
         <SupabaseProvider>
           <UserProvider>
             <ModalProvider />
-             <Sidebar  >
+             <Sidebar songs={userSongs} >
               {children}
              </Sidebar>
+             <Player/>
            
           </UserProvider>
         </SupabaseProvider>

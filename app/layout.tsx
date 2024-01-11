@@ -1,47 +1,47 @@
-import Sidebar from '@/components/Sidebar'
-import './globals.css'
-import { Figtree } from 'next/font/google';
-import SupabaseProvider from '@/providers/SuperbaseProvider'
-import UserProvider from '@/providers/UserProvider'
-import ModalProvider from '../providers/ModalProvider';
-import ToasterProvider from '@/providers/ToasterProvider'
-import ReactPlayer from 'react-player';
-import getSongs from '@/actions/getSongs'
-import getSongsByUserId from '@/actions/getSongsByUserId';
-import Player from '@/components/Player';
+import { Figtree } from 'next/font/google'
 
+import getSongsByUserId from '@/actions/getSongsByUserId'
+import getActiveProductsWithPrices from '@/actions/getActiveProductsWithPrices'
+import Sidebar from '@/components/Sidebar'
+import ToasterProvider from '@/providers/ToasterProvider'
+import UserProvider from '@/providers/UserProvider'
+import ModalProvider from '@/providers/ModalProvider'
+import SupabaseProvider from '@/providers/SuperbaseProvider'
+import Player from '@/components/Player'
+
+import './globals.css'
 
 const font = Figtree({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'Lyrico',
-  description: 'Listen to music',
-};
-export const revalidate=0;
+  description: 'A music streaming website',
+}
+
+export const revalidate = 0;
 
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const products = await getActiveProductsWithPrices();
   const userSongs = await getSongsByUserId();
 
   return (
-    
     <html lang="en">
       <body className={font.className}>
         <ToasterProvider />
         <SupabaseProvider>
           <UserProvider>
-            <ModalProvider />
-             <Sidebar songs={userSongs} >
+            <ModalProvider products={products} />
+            <Sidebar songs={userSongs}>
               {children}
-             </Sidebar>
-             <Player/>
-           
+            </Sidebar>
+            <Player />
           </UserProvider>
         </SupabaseProvider>
-        </body>
+      </body>
     </html>
   )
 }

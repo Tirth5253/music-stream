@@ -7,6 +7,8 @@ export interface Song {
   title: string;
   song_path: string;
   image_path: string;
+  duration:number;
+  Genre:String;
 }
 
 export interface Product {
@@ -17,6 +19,8 @@ export interface Product {
   image?: string;
   metadata?: Stripe.Metadata;
 }
+
+
 
 export interface Price {
   id: string;
@@ -49,8 +53,32 @@ export interface UserDetails {
 }
 
 export interface ProductWithPrice extends Product {
+  user_id: string;
   prices?: Price[];
+  author: string;
+  title: string;
+  song_path: string;
+  image_path: string;
+  duration: number; 
+  
+  
 }
+
+const convertProductToSong = (product: ProductWithPrice): Song => {
+  return {
+    id: product.id.toString(),
+    user_id: product.user_id.toString(),
+    author: product.author,
+    title: product.title,
+    song_path: product.song_path,
+    image_path: product.image_path,
+    duration: product.duration,
+    Genre: "Pop", // Provide an appropriate string value for 'Genre'
+    // Add other properties specific to Song
+  };
+};
+
+
 
 export interface Subscription {
   id: string;

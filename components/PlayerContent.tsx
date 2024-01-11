@@ -1,8 +1,6 @@
-"use client";
-
 import useSound from "use-sound";
 import { useEffect, useState } from "react";
-import { BsPauseFill, BsPlayFill } from "react-icons/bs";
+import { BsArrowDown, BsPauseFill, BsPlayFill } from "react-icons/bs";
 import { HiSpeakerWave, HiSpeakerXMark } from "react-icons/hi2";
 import { AiFillStepBackward, AiFillStepForward } from "react-icons/ai";
 
@@ -12,20 +10,31 @@ import usePlayer from "@/hooks/usePlayer";
 import LikeButton from "./LikeButton";
 import MediaItem from "./MediaItem";
 import Slider from "./Slider";
+import { TbPlaylist } from "react-icons/tb";
+import { AiOutlinePlus } from "react-icons/ai";
 
+
+import useUploadModal from "@/hooks/useUploadModal";
+import { useUser } from "@/hooks/useUser";
+import useAuthModal from "@/hooks/useAuthModal";
+import useSubscribeModal from "@/hooks/useSubscribeModal";
+import useOnPlay from "@/hooks/useOnPlay";
 
 interface PlayerContentProps {
   song: Song;
   songUrl: string;
 }
 
-const PlayerContent: React.FC<PlayerContentProps> = ({ 
-  song, 
-  songUrl
-}) => {
+const PlayerContent: React.FC<PlayerContentProps> = ({ song, songUrl }) => {
   const player = usePlayer();
   const [volume, setVolume] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const { user, subscription } = useUser();
+  const uploadModal = useUploadModal();
+  const authModal = useAuthModal();
+  const subscribeModal = useSubscribeModal();
 
   const Icon = isPlaying ? BsPauseFill : BsPlayFill;
   const VolumeIcon = volume === 0 ? HiSpeakerXMark : HiSpeakerWave;
@@ -60,27 +69,33 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
     player.setId(previousSong);
   }
 
-  const [play, { pause, sound }] = useSound(
-    songUrl,
-    { 
-      volume: volume,
-      onplay: () => setIsPlaying(true),
-      onend: () => {
-        setIsPlaying(false);
-        onPlayNext();
-      },
-      onpause: () => setIsPlaying(false),
-      format: ['mp3']
-    }
-  );
+  const [play, { pause, sound }] = useSound(songUrl, {
+    volume: volume,
+    onplay: () => setIsPlaying(true),
+    onend: () => {
+      setIsPlaying(false);
+      onPlayNext();
+    },
+    onpause: () => setIsPlaying(false),
+    format: ['mp3']
+  });
 
   useEffect(() => {
     sound?.play();
-    
+
+    const audio = new Audio(songUrl);
+    audio.addEventListener('loadedmetadata', () => {
+      setDuration(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      setCurrentTime(audio.currentTime);
+    });
+
     return () => {
       sound?.unload();
     }
-  }, [sound]);
+  }, [sound, songUrl]);
 
   const handlePlay = () => {
     if (!isPlaying) {
@@ -98,109 +113,87 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
     }
   }
 
-  return ( 
+  const handleDownload = () => {
+    if (!subscription) {
+      return subscribeModal.onOpen();
+    }
+    const link = document.createElement('a');
+    link.href = songUrl;
+    link.download = `${song.title}.mp3`;
+
+    link.click();
+  };
+
+  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = parseFloat(event.target.value);
+    setCurrentTime(newTime);
+    sound?.seek(newTime);
+  };
+
+  return (
     <div className="grid grid-cols-2 md:grid-cols-3 h-full">
-        <div className="flex w-full justify-start">
-          <div className="flex items-center gap-x-4">
-            <MediaItem data={song} />
-            <LikeButton songId={song.id} />
-          </div>
+      <div className="flex w-full justify-start">
+        <div className="flex items-center gap-x-4">
+          <MediaItem data={song} />
+          <LikeButton songId={song.id} />
         </div>
+      </div>
 
-        <div 
-          className="
-            flex 
-            md:hidden 
-            col-auto 
-            w-full 
-            justify-end 
-            items-center
-          "
+      <div className="md:flex w-full justify-center items-center mr-1">
+        <AiFillStepBackward
+          onClick={onPlayPrevious}
+          size={30}
+          className="text-neutral-400 cursor-pointer hover:text-white transition"
+        />
+        <div
+          onClick={handlePlay}
+          className="flex items-center justify-center h-10 w-10 rounded-full bg-white p-1 cursor-pointer"
         >
-          <div 
-            onClick={handlePlay} 
-            className="
-              h-10
-              w-10
-              flex 
-              items-center 
-              justify-center 
-              rounded-full 
-              bg-white 
-              p-1 
-              cursor-pointer
-            "
-          >
-            <Icon size={30} className="text-black" />
-          </div>
+          <Icon size={30} className="text-black" />
         </div>
+        <AiFillStepForward
+          onClick={onPlayNext}
+          size={30}
+          className="text-neutral-400 cursor-pointer hover:text-white transition"
+        />
+      </div>
 
-        <div 
-          className="
-            hidden
-            h-full
-            md:flex 
-            justify-center 
-            items-center 
-            w-full 
-            max-w-[722px] 
-            gap-x-6
-          "
-        >
-          <AiFillStepBackward
-            onClick={onPlayPrevious}
-            size={30} 
-            className="
-              text-neutral-400 
-              cursor-pointer 
-              hover:text-white 
-              transition
-            "
-          />
-          <div 
-            onClick={handlePlay} 
-            className="
-              flex 
-              items-center 
-              justify-center
-              h-10
-              w-10 
-              rounded-full 
-              bg-white 
-              p-1 
-              cursor-pointer
-            "
-          >
-            <Icon size={30} className="text-black" />
-          </div>
-          <AiFillStepForward
-            onClick={onPlayNext}
-            size={30} 
-            className="
-              text-neutral-400 
-              cursor-pointer 
-              hover:text-white 
-              transition
-            " 
-          />
-        </div>
-
-        <div className="hidden md:flex w-full justify-end pr-2">
-          <div className="flex items-center gap-x-2 w-[120px]">
-            <VolumeIcon 
+      <div className="md:flex w-full justify-end pr-2">
+      
+        <div className="mt-3 mr-2 ml-1 pl-3" >
+        <VolumeIcon  
               onClick={toggleMute} 
               className="cursor-pointer" 
-              size={34} 
+              size={30} 
             />
-            <Slider 
-              value={volume} 
-              onChange={(value) => setVolume(value)}
-            />
-          </div>
+            </div>
+            
+        <Slider // Add the Slider component here
+          value={volume}
+          onChange={(value) => setVolume(value)}
+        />
+        <div className="w-full ml-20 mt-4 mr-10">
+          <input
+            type="range"
+            min={0}
+            max={duration}
+            value={currentTime}
+            onChange={handleSeek}
+            step={0.01}
+          />
         </div>
-
+        <div className="flex items-center gap-x-2 mt-[2px] mb-3">
+  <div className="cursor-pointer rounded-full border border-blue-900 p-2   ">
+    <a onClick={handleDownload}>
+      <BsArrowDown size={20 }   />
+    </a>
+  </div>
+</div>
       </div>
-   );
+    </div>
+  );
 }
- 
+
+
+
 export default PlayerContent;

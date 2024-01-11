@@ -11,6 +11,8 @@ import {useUser} from "../hooks/useUser";
 import { FaUserAlt } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
+import Home from "@/app/(site)/page";
+import { RiAppsFill } from "react-icons/ri";
 
 interface HeaderProps{
     children: React.ReactNode;
